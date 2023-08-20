@@ -1,7 +1,15 @@
 {
   "index": "Introduction",
   "get-started": "Get Started",
-  "features": "Features",
+  "features": {
+    "title":"Features",
+    "shownavitem":true
+  },
   "themes": "Themes",
-  "advanced": "Advanced"
+  "advanced": "Advanced",
+  "hidden-page": {
+    "title": "Hidden Page",
+    "type": "page",
+    "shownavitem":false
+  }
 }
