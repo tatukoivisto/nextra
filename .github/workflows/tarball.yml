@@ -6,40 +6,13 @@ on:
       - private
 
 jobs:
-  build:
+  create-tarball:
     runs-on: ubuntu-latest
-
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      # Step 2: Create the tarball
-      - name: Create Tarball
-        run: |
-          REPO_NAME=$(basename ${{ github.repository }})
-          BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///')
-          tar --warning=no-file-changed -czvf ${REPO_NAME}-${BRANCH_NAME}.tar.gz --exclude='./.git/*' .
-
-      # Step 3: Create a GitHub release
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - uses: actions/checkout@master
+      - uses: actions/tar@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Step 4: Upload the tarball as a release asset
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${REPO_NAME}-${BRANCH_NAME}.tar.gz
-          asset_name: ${REPO_NAME}-${BRANCH_NAME}.tar.gz
-          asset_content_type: application/gzip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          current_working_directory: .
+          c: true
+          files: '*'
+          path: release.tar.gz
