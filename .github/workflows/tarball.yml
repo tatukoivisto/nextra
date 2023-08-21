@@ -4,11 +4,21 @@ on:
   push:
     branches:
       - private
-run: |
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create Tarball
+        run: |
           REPO_NAME=$(basename ${{ github.repository }})
-          TAG_OR_BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/[a-z]*\///' | tr '/' '-')
-          tar --warning=no-file-changed -czvf ${REPO_NAME}-${TAG_OR_BRANCH_NAME}.tar.gz --exclude='./.git/*' .
-        
+          BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///')
+          tar --warning=no-file-changed -czvf ${REPO_NAME}-${BRANCH_NAME}.tar.gz --exclude='./.git/*' .
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -24,8 +34,8 @@ run: |
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${REPO_NAME}-${TAG_OR_BRANCH_NAME}.tar.gz
-          asset_name: ${REPO_NAME}-${TAG_OR_BRANCH_NAME}.tar.gz
+          asset_path: ./${REPO_NAME}-${BRANCH_NAME}.tar.gz
+          asset_name: ${REPO_NAME}-${BRANCH_NAME}.tar.gz
           asset_content_type: application/gzip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
