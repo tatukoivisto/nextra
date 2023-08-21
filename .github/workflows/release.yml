@@ -3,11 +3,11 @@ name: Release
 on:
   push:
     branches:
-      - main
+      - private
 
 jobs:
   release:
-    if: github.repository == 'shuding/nextra'
+    if: github.repository == 'tatukoivisto/nextra'
 
     runs-on: ubuntu-latest
 
@@ -43,4 +43,3 @@ jobs:
           version: pnpm run version # should be `pnpm run`
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
