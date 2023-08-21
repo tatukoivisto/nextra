@@ -15,8 +15,8 @@ jobs:
       - name: Create Tarball
         run: |
           REPO_NAME=$(basename ${{ github.repository }})
-          TAG_NAME=$(echo ${{ github.ref }} | sed 's/refs\/tags\///')
-          tar --warning=no-file-changed -czvf ${REPO_NAME}-${TAG_NAME}.tar.gz --exclude='./.git/*' .
+          TAG_OR_BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/[a-z]*\///' | tr '/' '-')
+          tar -czvf ${REPO_NAME}-${TAG_OR_BRANCH_NAME}.tar.gz --exclude='./.git/*' .
 
       - name: Create Release
         id: create_release
