@@ -49,7 +49,8 @@ const menuItemSchema = z.strictObject({
   display: displaySchema.optional(),
   items: z.record(linkItemSchema.partial({ href: true, newWindow: true })),
   title: titleSchema,
-  type: z.literal('menu')
+  type: z.literal('menu'),
+  shownavitem: z.boolean().optional()
 })
 
 const separatorItemSchema = z.strictObject({
@@ -62,7 +63,8 @@ const itemSchema = linkItemSchema
     display: displaySchema,
     theme: pageThemeSchema,
     title: titleSchema,
-    type: z.enum(['page', 'doc'])
+    type: z.enum(['page', 'doc']),
+    shownavitem: z.boolean().optional()
   })
   .deepPartial()
 
@@ -108,11 +110,13 @@ export type PageItem = (MdxFile | FolderWithoutChildren) & {
   display?: Display
   withIndexPage?: boolean
   isUnderCurrentDocsTree?: boolean
+  shownavitem?: boolean
 }
 
 export type MenuItem = (MdxFile | FolderWithoutChildren) &
   IMenuItem & {
     children?: PageItem[]
+    shownavitem?: boolean
   }
 
 type DocsItem = (MdxFile | FolderWithoutChildren) & {
@@ -381,7 +385,7 @@ export function normalizePages({
           if (Array.isArray(docsItem.children)) {
             docsItem.children.push(...normalizedChildren.docsDirectories)
           }
-          // Itself is a doc page.
+          // Itself is a doc page
           if (item.withIndexPage && display !== 'children') {
             flatDocsDirectories.push(docsItem)
           }
@@ -394,10 +398,16 @@ export function normalizePages({
       }
     } else {
       flatDirectories.push(item)
+    }
+    if (a.shownavitem) {
+      topLevelNavbarItems.push(pageItem)
+    } else {
       switch (type) {
         case 'page':
         case 'menu':
-          topLevelNavbarItems.push(pageItem)
+          if (a.shownavitem !== false) {
+            topLevelNavbarItems.push(pageItem)
+          }
           break
         case 'doc':
           flatDocsDirectories.push(docsItem)
