@@ -385,7 +385,7 @@ export function normalizePages({
           if (Array.isArray(docsItem.children)) {
             docsItem.children.push(...normalizedChildren.docsDirectories)
           }
-          // Itself is a doc page.
+          // Itself is a doc page
           if (item.withIndexPage && display !== 'children') {
             flatDocsDirectories.push(docsItem)
           }
