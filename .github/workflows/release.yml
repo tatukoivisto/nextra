@@ -47,4 +47,3 @@ jobs:
           version: pnpm run version # should be `pnpm run`
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
