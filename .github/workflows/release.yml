@@ -35,8 +35,10 @@ jobs:
       - name: Type Check
         run: pnpm types:check
 
-      - name: Print .npmrc
-        run: cat .npmrc | grep -v "//npm.pkg.github.com/:_authToken"
+      - name: Print part of the token from .npmrc
+        run: |
+          TOKEN=$(grep "//npm.pkg.github.com/:_authToken" .npmrc | cut -d '=' -f2)
+          echo "Token starts with: ${TOKEN:0:5}... and ends with: ${TOKEN: -5}"
 
       - name: Create Release Pull Request or Publish to npm
         uses: changesets/action@v1
