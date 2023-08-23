@@ -35,18 +35,14 @@ jobs:
       - name: Type Check
         run: pnpm types:check
 
-      - name: Creating .npmrc
+      - name: Creating .npmrc for GitHub Packages
         run: |
           cat << EOF > "$HOME/.npmrc"
-            //registry.npmjs.org/:_authToken=$NPM_TOKEN
+            @tatukoivisto:registry=https://npm.pkg.github.com/
+            //npm.pkg.github.com/:_authToken=$GH_PACKAGES_TOKEN
           EOF
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Print part of the token from .npmrc
-        run: |
-          TOKEN=$(grep "//npm.pkg.github.com/:_authToken" .npmrc | cut -d '=' -f2)
-          echo "Token starts with: ${TOKEN:0:5}... and ends with: ${TOKEN: -5}"
+          GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release Pull Request or Publish to npm
         uses: changesets/action@v1
