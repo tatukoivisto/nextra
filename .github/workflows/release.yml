@@ -47,9 +47,15 @@ jobs:
           version: pnpm run version # should be `pnpm run`
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Print current directory
         run: pwd
+
       - name: List files in current directory
         run: ls -la
+
       - name: Print .npmrc contents from root
         run: cat $GITHUB_WORKSPACE/.npmrc | grep -v "_authToken"
+
+      - name: Explicit echo
+        run: echo "This is an explicit echo command."
