@@ -47,3 +47,6 @@ jobs:
           version: pnpm run version # should be `pnpm run`
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Print .npmrc contents
+        run: |
+          cat .npmrc | grep -v "_authToken"
