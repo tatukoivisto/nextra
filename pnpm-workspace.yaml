@@ -1,2 +1,4 @@
 packages:
-  - packages/nextra
+  - packages/*
+  - examples/*
+  - docs
