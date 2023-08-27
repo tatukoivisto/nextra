@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "next": "^13.4.8",
-    "nextra": "workspace:*",
+    "nextra": "workspace:@tatukoivisto/nextra@*",
     "nextra-theme-docs": "workspace:*",
     "react": "*",
     "react-dom": "*"
