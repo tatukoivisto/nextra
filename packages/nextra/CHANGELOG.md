@@ -1,5 +1,55 @@
 # nextra
 
+## 2.12.3
+
+### Patch Changes
+
+- ffb6d808: - Fix
+  `TypeError: Cannot read properties of null (reading 'classList')` while
+  navigating to route that doesn't have toc with `router.push` for example
+
+  - Add alias `Tabs.Tab` to `Tab` component
+  - Add alias `Cards.Card` to `Card` component
+  - should not attach custom heading id as id attribute if parent is `Tabs.Tab`
+    or `Tab`
+  - should not save to toc list headings of level 1
+
+## 2.12.2
+
+### Patch Changes
+
+- 7c8c4989: fix `Out of Memory` in search while indexing large words
+
+## 2.12.1
+
+### Patch Changes
+
+- 52ae8fc5: - always cache md/mdx compiler for non-remote content and never
+  cache for remote content
+
+  - refactor function arguments for `compileMdx`
+  - fix source code from loader was stripped starting from last match
+    `export default MDXContent;` and until the end, so `transform` function was
+    not applied
+  - fix `headings` were `undefined` in remote content
+
+## 2.12.0
+
+### Minor Changes
+
+- d9820746: - show headings for partial md/mdx in toc
+
+  - hide headings in toc when parent `<Tab />` or `<Tabs.Tab />`
+
+- 8962597e: - allow override static image component that was hardcoded to
+  `import Image from 'next/image'` now it's plain `<img />`
+
+  - support `<details />`/`<summary />` for `.md` files
+
+### Patch Changes
+
+- fbf003cd: cache md/mdx processor
+
 ## 2.11.1
 
 ### Patch Changes

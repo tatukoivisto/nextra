@@ -9,6 +9,7 @@ import grayMatter from 'gray-matter'
 import rehypeKatex from 'rehype-katex'
 import type { Options as RehypePrettyCodeOptions } from 'rehype-pretty-code'
 import rehypePrettyCode from 'rehype-pretty-code'
+import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import remarkReadingTime from 'remark-reading-time'
@@ -26,13 +27,19 @@ import {
   remarkCustomHeadingId,
   remarkHeadings,
   remarkLinkRewrite,
+  remarkMdxDisableExplicitJsx,
   remarkRemoveImports,
   remarkReplaceImports,
   remarkStaticImage,
-  structurize
+  remarkStructurize
 } from './mdx-plugins'
 import theme from './theme.json'
-import type { LoaderOptions, PageOpts, ReadingTime } from './types'
+import type {
+  LoaderOptions,
+  PageOpts,
+  ReadingTime,
+  StructurizedData
+} from './types'
 import { truthy } from './utils'
 
 globalThis.__nextra_temp_do_not_use = () => {
@@ -73,25 +80,26 @@ type MdxOptions = LoaderOptions['mdxOptions'] &
 // because we already use `remarkLinkRewrite` function to remove .mdx? extensions
 const clonedRemarkLinkRewrite = remarkLinkRewrite.bind(null)
 
+type CompileMdxOptions = Pick<
+  LoaderOptions,
+  | 'staticImage'
+  | 'flexsearch'
+  | 'defaultShowCopyCode'
+  | 'readingTime'
+  | 'latex'
+  | 'codeHighlight'
+> & {
+  mdxOptions?: MdxOptions
+  route?: string
+  locale?: string
+  filePath?: string
+  useCachedCompiler?: boolean
+  isPageImport?: boolean
+}
+
 export async function compileMdx(
   source: string,
-  loaderOptions: Pick<
-    LoaderOptions,
-    | 'staticImage'
-    | 'flexsearch'
-    | 'defaultShowCopyCode'
-    | 'readingTime'
-    | 'latex'
-    | 'codeHighlight'
-  > & { mdxOptions?: MdxOptions; route?: string; locale?: string } = {},
-  { filePath = '', useCachedCompiler = false, isPageImport = true } = {}
-) {
-  // Extract frontMatter information if it exists
-  const { data: frontMatter, content } = grayMatter(source)
-
-  const structurizedData = Object.create(null)
-
-  const {
+  {
     staticImage,
     flexsearch,
     readingTime,
@@ -100,8 +108,14 @@ export async function compileMdx(
     defaultShowCopyCode,
     route = '',
     locale,
-    mdxOptions
-  } = loaderOptions
+    mdxOptions,
+    filePath = '',
+    useCachedCompiler,
+    isPageImport = true
+  }: CompileMdxOptions = {}
+) {
+  // Extract frontMatter information if it exists
+  const { data: frontMatter, content } = grayMatter(source)
 
   let searchIndexKey: string | null = null
   if (
@@ -142,9 +156,43 @@ export async function compileMdx(
   const isFileOutsideCWD =
     !isPageImport && path.relative(CWD, filePath).startsWith('..')
 
+  const isRemoteContent = outputFormat === 'function-body'
+
   const compiler =
-    (useCachedCompiler && cachedCompilerForFormat[format]) ||
-    (cachedCompilerForFormat[format] = createProcessor({
+    !useCachedCompiler || isRemoteContent
+      ? createCompiler()
+      : (cachedCompilerForFormat[format] ??= createCompiler())
+  const processor = compiler()
+
+  try {
+    const vFile = await processor.process(
+      filePath ? { value: content, path: filePath } : content
+    )
+
+    const { title, hasJsxInH1, readingTime, structurizedData } = vFile.data as {
+      readingTime?: ReadingTime
+      structurizedData: StructurizedData
+      title?: string
+    } & Pick<PageOpts, 'hasJsxInH1'>
+    // https://github.com/shuding/nextra/issues/1032
+    const result = String(vFile).replaceAll('__esModule', '_\\_esModule')
+
+    return {
+      result,
+      ...(title && { title }),
+      ...(hasJsxInH1 && { hasJsxInH1 }),
+      ...(readingTime && { readingTime }),
+      ...(searchIndexKey !== null && { searchIndexKey, structurizedData }),
+      ...(isRemoteContent && { headings: vFile.data.headings }),
+      frontMatter
+    }
+  } catch (err) {
+    console.error(`[nextra] Error compiling ${filePath}.`)
+    throw err
+  }
+
+  function createCompiler(): Processor {
+    return createProcessor({
       jsx,
       format,
       outputFormat,
@@ -162,12 +210,18 @@ export async function compileMdx(
             storageKey: 'selectedPackageManager'
           }
         ] satisfies Pluggable,
-        outputFormat === 'function-body' && remarkRemoveImports,
+        isRemoteContent && remarkRemoveImports,
         remarkGfm,
+        format !== 'md' &&
+          ([
+            remarkMdxDisableExplicitJsx,
+            // Replace the <summary> and <details> with customized components
+            { whiteList: ['details', 'summary'] }
+          ] satisfies Pluggable),
         remarkCustomHeadingId,
-        remarkHeadings,
+        [remarkHeadings, { isRemoteContent }] satisfies Pluggable,
         // structurize should be before remarkHeadings because we attach #id attribute to heading node
-        searchIndexKey !== null && structurize(structurizedData, flexsearch),
+        flexsearch && ([remarkStructurize, flexsearch] satisfies Pluggable),
         staticImage && remarkStaticImage,
         readingTime && remarkReadingTime,
         latex && remarkMath,
@@ -184,6 +238,12 @@ export async function compileMdx(
       ].filter(truthy),
       rehypePlugins: [
         ...(rehypePlugins || []),
+        format === 'md' && [
+          // To render <details /> and <summary /> correctly
+          rehypeRaw,
+          // fix Error: Cannot compile `mdxjsEsm` node for npm2yarn and mermaid
+          { passThrough: ['mdxjsEsm', 'mdxJsxFlowElement'] }
+        ],
         [parseMeta, { defaultShowCopyCode }],
         codeHighlight !== false &&
           ([
@@ -196,32 +256,6 @@ export async function compileMdx(
         attachMeta,
         latex && rehypeKatex
       ].filter(truthy)
-    }))
-
-  try {
-    compiler.data('headingMeta', { headings: [] })
-    const vFile = await compiler.process(
-      filePath ? { value: content, path: filePath } : content
-    )
-
-    const headingMeta = compiler.data('headingMeta') as Pick<
-      PageOpts,
-      'headings' | 'hasJsxInH1'
-    >
-    const readingTime = vFile.data.readingTime as ReadingTime | undefined
-    const title = headingMeta.headings.find(h => h.depth === 1)?.value
-    return {
-      // https://github.com/shuding/nextra/issues/1032
-      result: String(vFile).replaceAll('__esModule', '_\\_esModule'),
-      ...headingMeta,
-      ...(title && { title }),
-      ...(readingTime && { readingTime }),
-      structurizedData,
-      searchIndexKey,
-      frontMatter
-    }
-  } catch (err) {
-    console.error(`[nextra] Error compiling ${filePath}.`)
-    throw err
+    })
   }
 }

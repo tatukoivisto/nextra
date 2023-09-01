@@ -1,5 +1,59 @@
 # nextra-theme-docs
 
+## 2.12.3
+
+### Patch Changes
+
+- ffb6d808: - Fix
+  `TypeError: Cannot read properties of null (reading 'classList')` while
+  navigating to route that doesn't have toc with `router.push` for example
+
+  - Add alias `Tabs.Tab` to `Tab` component
+  - Add alias `Cards.Card` to `Card` component
+  - should not attach custom heading id as id attribute if parent is `Tabs.Tab`
+    or `Tab`
+  - should not save to toc list headings of level 1
+
+- Updated dependencies [ffb6d808]
+  - nextra@2.12.3
+
+## 2.12.2
+
+### Patch Changes
+
+- 7c8c4989: fix `Out of Memory` in search while indexing large words
+- Updated dependencies [7c8c4989]
+  - nextra@2.12.2
+
+## 2.12.1
+
+### Patch Changes
+
+- Updated dependencies [52ae8fc5]
+  - nextra@2.12.1
+
+## 2.12.0
+
+### Minor Changes
+
+- d9820746: - show headings for partial md/mdx in toc
+
+  - hide headings in toc when parent `<Tab />` or `<Tabs.Tab />`
+
+- 63271a41: add toc.backToTop option
+- 8962597e: - allow override static image component that was hardcoded to
+  `import Image from 'next/image'` now it's plain `<img />`
+
+  - support `<details />`/`<summary />` for `.md` files
+
+### Patch Changes
+
+- cca36d32: do not render mobile sidebar on desktop
+- Updated dependencies [d9820746]
+- Updated dependencies [fbf003cd]
+- Updated dependencies [8962597e]
+  - nextra@2.12.0
+
 ## 2.11.1
 
 ### Patch Changes
