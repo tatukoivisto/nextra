@@ -9,14 +9,7 @@ import { MDXProvider } from 'nextra/mdx'
 import './polyfill'
 import type { PageTheme } from 'nextra/normalize-pages'
 import { normalizePages } from 'nextra/normalize-pages'
-import {
-  Banner,
-  Breadcrumb,
-  Head,
-  NavLinks,
-  Sidebar,
-  SkipNavContent
-} from './components'
+import { Banner, Head, NavLinks, Sidebar, SkipNavContent } from './components'
 import { DEFAULT_LOCALE, PartialDocsThemeConfig } from './constants'
 import { ActiveAnchorProvider, ConfigProvider, useConfig } from './contexts'
 import { getComponents } from './mdx-components'
@@ -24,7 +17,6 @@ import { renderComponent } from './utils'
 
 interface BodyProps {
   themeContext: PageTheme
-  breadcrumb: ReactNode
   timestamp?: number
   navigation: ReactNode
   children: ReactNode
@@ -39,7 +31,6 @@ const classes = {
 
 const Body = ({
   themeContext,
-  breadcrumb,
   timestamp,
   navigation,
   children
@@ -59,17 +50,27 @@ const Body = ({
   const gitTimestampEl =
     // Because a user's time zone may be different from the server page
     mounted && date ? (
-      <div className="nx-mt-12 nx-mb-8 nx-block nx-text-xs nx-text-gray-500 ltr:nx-text-right rtl:nx-text-left dark:nx-text-gray-400">
-        {renderComponent(config.gitTimestamp, { timestamp: date })}
-      </div>
+      <>
+        {config.frontMatter.author ? (
+          <div className="nx-block nx-text-xs nx-text-gray-500 ltr:nx-text-right rtl:nx-text-left dark:nx-text-gray-400">
+            By {config.frontMatter.author}
+          </div>
+        ) : (
+          ''
+        )}
+
+        <div className="nx-mt-1 nx-block nx-text-xs nx-text-gray-500 ltr:nx-text-right rtl:nx-text-left dark:nx-text-gray-400">
+          {renderComponent(config.gitTimestamp, { timestamp: date })}
+        </div>
+      </>
     ) : (
       <div className="nx-mt-16" />
     )
 
   const content = (
     <>
-      {children}
       {gitTimestampEl}
+      {children}
       {navigation}
     </>
   )
@@ -99,7 +100,6 @@ const Body = ({
       )}
     >
       <main className="nx-w-full nx-min-w-0 nx-max-w-6xl nx-px-6 nx-pt-4 md:nx-px-12">
-        {breadcrumb}
         {body}
       </main>
     </article>
@@ -122,7 +122,6 @@ const InnerLayout = ({
     activeType,
     activeIndex,
     activeThemeContext,
-    activePath,
     topLevelNavbarItems,
     docsDirectories,
     flatDirectories,
@@ -208,11 +207,6 @@ const InnerLayout = ({
           <SkipNavContent />
           <Body
             themeContext={themeContext}
-            breadcrumb={
-              activeType !== 'page' && themeContext.breadcrumb ? (
-                <Breadcrumb activePath={activePath} />
-              ) : null
-            }
             timestamp={timestamp}
             navigation={
               activeType !== 'page' && themeContext.pagination ? (
